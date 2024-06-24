@@ -3,6 +3,8 @@ class Node {
         this.node = [x, y];
         this.adjacencyList = this.getAdjList();
         this.index = index;
+        this.dist = 0
+        this.par = null;
     }
 
     getAdjList() {  
@@ -50,23 +52,28 @@ class Chessboard{
         return board;
     }
 
-    static bfs(board, source, target, par, dist) {
+    static bfs(board, source) {
         const queue = [];
-        dist[source.index] = 0;
+        // set each nodes parent reference to -q and and distance to infinity
+        board.forEach(node => {
+            node.par = -1
+            node.dist = Infinity
+        })
+        // set source distance to 0
+        source.dist = 0;
 
         queue.push(source);
-        
+
         while (queue.length > 0) {
             const currentNode = queue.shift();
-            if (currentNode === target) {
-                break;
-            }
-
+            
             for (const neighbor of currentNode.adjacencyList) {
+
                 const neighborNode = Chessboard.findNode(board, neighbor[0], neighbor[1]);
-                if (dist[neighborNode.index] === Infinity) {
-                    par[neighborNode.index] = currentNode.index;
-                    dist[neighborNode.index] = dist[currentNode.index] + 1;
+
+                if (neighborNode.dist === Infinity) {
+                    neighborNode.par = currentNode.index;
+                    neighborNode.dist = currentNode.dist + 1;
                     queue.push(neighborNode);
                 }
             }
@@ -89,18 +96,19 @@ class Chessboard{
     }
 
     static findPath(board, source, target) {
-        const par = Array(64).fill(-1);
-        const dist = Array(64).fill(Infinity);
-        Chessboard.bfs(board, source, target, par, dist);
+    
+        Chessboard.bfs(board, source, target);
 
         const path = [];
         let currentNode = target;
         path.push(target);
-        while(par[currentNode.index] !== -1) {
-            let parNode = Chessboard.findNodeByIndex(board, par[currentNode.index]);
+
+        while(currentNode.par !== -1) {
+            let parNode = Chessboard.findNodeByIndex(board, currentNode.par);
             path.push(parNode);
             currentNode = parNode;
         }
+
         let processPath = [];
         path.forEach(node => {
             processPath.push(node.node);
